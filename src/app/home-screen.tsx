@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen01, Check, Copy01, Cube01, HelpCircle } from "@untitledui/icons";
+import { BookOpen01, Check, Copy01, Cube01, HelpCircle, User01 } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { UntitledLogoMinimal } from "@/components/foundations/logo/untitledui-logo-minimal";
@@ -38,6 +38,15 @@ export const HomeScreen = () => {
                 </div>
 
                 <div className="mt-6 flex items-center gap-3">
+                    <Button
+                        href="/portfolio"
+                        color="primary"
+                        size="lg"
+                        iconLeading={User01}
+                    >
+                        View Portfolio
+                    </Button>
+                    <div className="h-px w-4 bg-brand-solid" />
                     <Button
                         href="https://www.untitledui.com/react/docs/introduction"
                         target="_blank"
