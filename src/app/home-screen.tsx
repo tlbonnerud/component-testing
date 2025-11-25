@@ -186,25 +186,36 @@ const AnimatedCounter = ({ value, suffix = "", delay = 0 }: { value: number; suf
 
     useEffect(() => {
         if (isInView) {
+            let animationFrameId: number;
+            let isAnimating = true;
+            
             const timeout = setTimeout(() => {
                 const duration = 2000;
                 const startTime = Date.now();
                 
                 const animate = () => {
+                    if (!isAnimating) return;
+                    
                     const elapsed = Date.now() - startTime;
                     const progress = Math.min(elapsed / duration, 1);
                     const easeOut = 1 - Math.pow(1 - progress, 3);
                     setDisplayValue(Math.floor(easeOut * value));
                     
                     if (progress < 1) {
-                        requestAnimationFrame(animate);
+                        animationFrameId = requestAnimationFrame(animate);
                     }
                 };
                 
-                requestAnimationFrame(animate);
+                animationFrameId = requestAnimationFrame(animate);
             }, delay * 1000);
             
-            return () => clearTimeout(timeout);
+            return () => {
+                isAnimating = false;
+                clearTimeout(timeout);
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+            };
         }
     }, [isInView, value, delay]);
 
@@ -220,13 +231,24 @@ const AnimatedCounter = ({ value, suffix = "", delay = 0 }: { value: number; suf
     );
 };
 
+// Constants for the glowing orb
+const ORB_SIZE = 384; // 96 * 4 (w-96 = 24rem = 384px)
+const ORB_OFFSET = ORB_SIZE / 2;
+
 // Glowing orb cursor follower
 const GlowingOrb = () => {
     const [position, setPosition] = useState({ x: 0, y: 0 });
 
     useEffect(() => {
+        let lastUpdateTime = 0;
+        const throttleMs = 16; // ~60fps throttle
+        
         const handleMouseMove = (e: MouseEvent) => {
-            setPosition({ x: e.clientX, y: e.clientY });
+            const now = Date.now();
+            if (now - lastUpdateTime >= throttleMs) {
+                lastUpdateTime = now;
+                setPosition({ x: e.clientX, y: e.clientY });
+            }
         };
 
         window.addEventListener("mousemove", handleMouseMove);
@@ -237,8 +259,8 @@ const GlowingOrb = () => {
         <motion.div
             className="pointer-events-none fixed w-96 h-96 rounded-full bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 blur-3xl z-0"
             animate={{
-                x: position.x - 192,
-                y: position.y - 192,
+                x: position.x - ORB_OFFSET,
+                y: position.y - ORB_OFFSET,
             }}
             transition={{ type: "spring", stiffness: 50, damping: 30 }}
         />
@@ -499,7 +521,7 @@ export const HomeScreen = () => {
                         </MagneticButton>
                     </AnimatedText>
 
-                    {/* Social links */}
+                    {/* Social links - Replace '#' with your actual profile URLs */}
                     <motion.div
                         className="mt-16 flex justify-center gap-6"
                         initial={{ opacity: 0 }}
@@ -507,10 +529,16 @@ export const HomeScreen = () => {
                         viewport={{ once: true }}
                         transition={{ delay: 0.5 }}
                     >
-                        {["GitHub", "LinkedIn", "Twitter", "Dribbble"].map((social, i) => (
+                        {[
+                            { name: "GitHub", url: "#" },
+                            { name: "LinkedIn", url: "#" },
+                            { name: "Twitter", url: "#" },
+                            { name: "Dribbble", url: "#" },
+                        ].map((social, i) => (
                             <motion.a
-                                key={social}
-                                href="#"
+                                key={social.name}
+                                href={social.url}
+                                aria-label={`Visit ${social.name} profile`}
                                 className="text-tertiary transition-colors hover:text-violet-500"
                                 whileHover={{ y: -3, scale: 1.1 }}
                                 initial={{ opacity: 0, y: 20 }}
@@ -518,7 +546,7 @@ export const HomeScreen = () => {
                                 viewport={{ once: true }}
                                 transition={{ delay: 0.6 + i * 0.1 }}
                             >
-                                {social}
+                                {social.name}
                             </motion.a>
                         ))}
                     </motion.div>
